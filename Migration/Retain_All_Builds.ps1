@@ -72,12 +72,13 @@ foreach ($project in $projects.value) {
         }
 
         # Final step: set keepforever flag to true
-
-        $build.keepForever = $True
-        $body = $build | ConvertTo-Json -Depth 10
+		$buildObject = New-Object -TypeName PSObject;
+		$buildObject | Add-Member -NotePropertyName keepForever -NotePropertyValue $True
+		$buildJson = $buildObject | ConvertTo-Json
+        
         $urlBuildRetain = "$($azdCollectionUrl)/$($teamproject)/_apis/build//builds/$($build.id)?api-version=$($apiVersion)";
         if ($prodMode) {
-            Invoke-RestMethod -Uri $urlBuildRetain -Method Patch -ContentType application/json -Body $body -Header $header;
+            Invoke-RestMethod -Uri $urlBuildRetain -Method Patch -ContentType application/json -Body $buildObject -Header $header;
             write-host "[ProductionMode] Set KeepForever of buildnumber $($build.buildnumber) - $($build.definition.name) to true (keep it forever)"; 
         }
         else {
