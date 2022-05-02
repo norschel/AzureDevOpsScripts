@@ -55,7 +55,7 @@ foreach ($project in $projects.value) {
         $unretained = $unretained + $unretainedObjects.Count;
     }
 
-    write-host "Found $($builds.Count) builds in Team Project"
+    write-host "Found $($builds.Count) builds in Team Project $teamproject"
     Write-Host "Found $($unretained) builds without retain flag";
     Write-Host "Found $($retained) builds with retain flag";
 
@@ -85,4 +85,8 @@ foreach ($project in $projects.value) {
             write-host "[Dry-run without any change] Set KeepForever of buildnumber $($build.buildnumber) - definitionname $($build.definition.name) to true (keep it forever)" -ForegroundColor DarkYellow;
         }
     }
+    
+    write-host "Found $($builds.Count) builds in Team Project $teamproject"
+    Write-Host "Found $($unretained) builds without retain flag";
+    Write-Host "Found $($retained) builds with retain flag";
 }
