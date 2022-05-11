@@ -20,9 +20,7 @@ param(
     [Alias("BuildTag")]
     [string]$migrationTag = "CloudMigration",
     [parameter(Mandatory = $false)]
-    [string]$apiVersion = "6.0",
-    [parameter(Mandatory = $false)]
-    [string]$SnapshotName)
+    [string]$apiVersion = "6.0")
 
 $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$($pat)"))
 $header = @{authorization = "Basic $token" }
