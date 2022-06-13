@@ -27,12 +27,20 @@ $projects = Invoke-RestMethod -Uri $projectsUrl -Method Get -Header $header -Con
 foreach ($project in $projects.value) {
 
     write-host "Processing Team Project $($project.name)" -ForegroundColor Green
-
     $teamproject = $project.name;
 
-    # Find all builds in team project
-    $buildsUrl = "$($azdCollectionUrl)/$($teamproject)/_apis/build/builds?api-version=$($apiVersion)";
-    $builds = Invoke-RestMethod -Uri $buildsUrl -Method Get -Header $header -ContentType "application/json"; 
+    # Find all builds definitions in team project
+    $buildDefsList = "$($azdCollectionUrl)/$($teamproject)/_apis/build/definitions?api-version=$($apiVersion)"
+    $buildDefs = Invoke-RestMethod -Uri $buildDefsList -Method Get -Header $header -ContentType "application/json";
+    $builds = @()
+
+    foreach ($buildDef in $buildDefs.value|select id, name)
+    {
+    	# Find all builds in team project
+    	$buildsUrl = "$($azdCollectionUrl)/$($teamproject)/_apis/build/builds?definitions=$($buildDef.id)&api-version=$($apiVersion)";
+    	$buildsResult = Invoke-RestMethod -Uri $buildsUrl -Method Get -Header $header -ContentType "application/json";
+    	$builds += $buildsResult;
+    }
 
     # Calculating some statistics
     $affected = 0;
@@ -54,11 +62,11 @@ foreach ($project in $projects.value) {
 
     $buildsToStop = $builds.value.Where({ ($_.status -eq $buildState)});
     ForEach ($build in $buildsToStop) {
-		    $buildObject = New-Object -TypeName PSObject;
+	$buildObject = New-Object -TypeName PSObject;
         $buildObject | Add-Member -NotePropertyName status -NotePropertyValue Cancelling
-		    $buildJson = $buildObject | ConvertTo-Json
+	$buildJson = $buildObject | ConvertTo-Json
         
-        $urlBuildToStop = "$($azdCollectionUrl)/$($teamproject)/_apis/build//builds/$($build.id)?api-version=$($apiVersion)";
+        $urlBuildToStop = "$($azdCollectionUrl)/$($teamproject)/_apis/build/builds/$($build.id)?api-version=$($apiVersion)";
         if ($prodMode) {
             Invoke-RestMethod -Uri $urlBuildToStop -Method Patch -ContentType application/json -Body $buildObject -Header $header;
             write-host "[ProductionMode] Cancelling the build $($build.buildnumber) - definitionname $($build.definition.name)"; 
