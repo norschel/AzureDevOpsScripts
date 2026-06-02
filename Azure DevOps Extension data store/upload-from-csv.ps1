@@ -29,6 +29,9 @@
     The scope type to prepend to the ScopeValueIdText column value (default: "Default").
     Together they form the scope path segment, e.g. "Default/Current" or "User/Me".
 
+.PARAMETER ApiVersion
+    The Azure DevOps REST API version to use (default: "6.0-preview.1").
+
 .PARAMETER BaseUrl
     The base URL for Azure DevOps (default: "https://dev.azure.com").
 
@@ -63,6 +66,9 @@ param(
     [string]$ScopeType = "Default",
 
     [Parameter(Mandatory=$false)]
+    [string]$ApiVersion = "6.0-preview.1",
+
+    [Parameter(Mandatory=$false)]
     [string]$BaseUrl = "https://dev.azure.com",
 
     [Parameter(Mandatory=$false)]
@@ -77,6 +83,11 @@ if (-not (Test-Path $CsvFilePath)) {
 
 # Read CSV
 $rows = Import-Csv -Path $CsvFilePath -Delimiter $CsvDelimiter
+
+if ($rows.Count -eq 0) {
+    Write-Warning "CSV file contains no data rows. Nothing to upload."
+    exit 0
+}
 
 # Validate required columns
 $requiredColumns = @("PublisherName", "ExtensionName", "DocumentIdText", "ScopeValueIdText", "DocumentValue", "CollectionName")
@@ -94,9 +105,6 @@ $headers = @{
     "Authorization" = $authHeader
     "Content-Type"  = "application/json"
 }
-
-# API Version
-$apiVersion = "6.0-preview.1"
 
 $successCount = 0
 $failureCount = 0
@@ -119,7 +127,7 @@ foreach ($row in $rows) {
     $encodedCollection = [Uri]::EscapeDataString($collectionName)
 
     # Construct the API URL
-    $apiUrl = "$BaseUrl/$Organization/_apis/ExtensionManagement/InstalledExtensions/$publisherName/$extensionName/Data/Scopes/$scopePath/Collections/$encodedCollection/Documents/$documentId`?api-version=$apiVersion"
+    $apiUrl = "$BaseUrl/$Organization/_apis/ExtensionManagement/InstalledExtensions/$publisherName/$extensionName/Data/Scopes/$scopePath/Collections/$encodedCollection/Documents/$documentId`?api-version=$ApiVersion"
 
     Write-Verbose "Row $rowIndex - API URL: $apiUrl"
 
