@@ -140,8 +140,17 @@ foreach ($row in $rows) {
         continue
     }
 
-    # Set / overwrite the id field inside the document body as required by the API
+    # Always wrap payload so user data lives under `value`.
+    $hasValueProperty = $docObject.PSObject.Properties.Name -contains "value"
+    if (-not $hasValueProperty) {
+        $docObject = [PSCustomObject]@{
+            value = $docObject
+        }
+    }
+
+    # Set / overwrite required top-level fields as expected by the API consumer.
     $docObject | Add-Member -MemberType NoteProperty -Name "id" -Value $documentId -Force
+    $docObject | Add-Member -MemberType NoteProperty -Name "__etag" -Value -1 -Force
 
     $body = $docObject | ConvertTo-Json -Depth 20 -Compress
 
