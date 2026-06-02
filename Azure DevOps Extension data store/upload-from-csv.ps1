@@ -140,17 +140,18 @@ foreach ($row in $rows) {
         continue
     }
 
-    # Always wrap payload so user data lives under `value`.
-    $hasValueProperty = $docObject.PSObject.Properties.Name -contains "value"
-    if (-not $hasValueProperty) {
-        $docObject = [PSCustomObject]@{
-            value = $docObject
-        }
+    # Build a strict envelope: { id, __etag, value }.
+    # If input already contains a top-level value field, use its content as value.
+    $valuePayload = $docObject
+    if ($docObject.PSObject.Properties.Name -contains "value") {
+        $valuePayload = $docObject.value
     }
 
-    # Set / overwrite required top-level fields as expected by the API consumer.
-    $docObject | Add-Member -MemberType NoteProperty -Name "id" -Value $documentId -Force
-    $docObject | Add-Member -MemberType NoteProperty -Name "__etag" -Value -1 -Force
+    $docObject = [PSCustomObject]@{
+        id     = $documentId
+        __etag = -1
+        value  = $valuePayload
+    }
 
     $body = $docObject | ConvertTo-Json -Depth 20 -Compress
 
