@@ -181,7 +181,13 @@ foreach ($row in $rows) {
     $collectionName = $row.CollectionName
 
     # Build full scope path: e.g. "Default/Current" or "User/Me"
-    $scopePath = "$ScopeType/$scopeValue"
+    if ($scopeValue -eq "Current") {
+        # Special handling for "Current" to use the $current marker
+        $scopePath = "$ScopeType/\$current"
+    }
+    else {
+        write-host "Skipping document because it belongs to user/me scope which is not supported by this script. Publisher='$publisherName' Extension='$extensionName' DocumentId='$documentId' ScopeValue='$scopeValue'"
+    }
 
     # URL-encode the collection name (handles leading '$' and other special chars)
     $encodedCollection = [Uri]::EscapeDataString($collectionName)
