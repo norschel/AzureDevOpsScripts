@@ -11,6 +11,9 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$oldFieldRefName = "Custom.FieldOld",
     [Parameter(Mandatory = $false)]
+    [ValidateRange(1, 1000000)]
+    [int]$WorkItemLimit = 100,
+    [Parameter(Mandatory = $false)]
     [switch]$DryRun,
     [Parameter(Mandatory = $false)]
     [switch]$Override
@@ -19,6 +22,7 @@ param(
 Write-Host "Organization: $Organization"
 Write-Host "Default Project: $Project"
 Write-Host "This script will copy data from field $oldFieldRefName to field $newFieldRefName"
+Write-Host "Work item limit: $WorkItemLimit"
 Write-Host "DryRun: $DryRun | Override: $Override"
 
 # Counters
@@ -41,7 +45,7 @@ Set-VSTeamDefaultProject $Project
 
 # Work Items abfragen
 $query = "Select [System.ID],[System.Title],[$($oldFieldRefName)],[$($newFieldRefName)] from WorkItems where [$($oldFieldRefName)] <> ''"
-$workitems = Get-VSTeamWiql -Query "$query"
+$workitems = Get-VSTeamWiql -Query $query -Top $WorkItemLimit
 
 Write-Host "Found $($workitems.WorkItemIDs.Count) work items with field $($oldFieldRefName)"
 Read-Host "Press any key to continue"
